@@ -151,14 +151,14 @@ ftable(d)
 ## ----echo=FALSE, results="asis"------------------------------------------
 toLatex(ftable(d, row.vars = 1, col.vars = c(3,2)))
 
-## ----sepsis-dotplot, fig.cap="Proportion of patients who died by the end of the study", fig.width=6, fig.height=6----
+## ----sepsis-dotplot, fig.cap="Proportion of patients who died by the end of the study", fig.width=4, fig.height=3----
 dd <- as.data.frame(ftable(d))
 r <- ddply(dd, c("strata", "group"), mutate, prop = Freq/sum(Freq))
 p <- ggplot(subset(r, status == "Dead"), aes(x = prop, y = group))
 p <- p + geom_point() + facet_wrap(~ strata, nrow = 2)
 p + scale_x_continuous(limits = c(0,0.5)) + labs(x = "Proportion deads", y = "")
 
-## ----sepsis-cotab, fig.cap="Conditional association plot", fig.width=8, fig.height=8, out.width=".75\\linewidth"----
+## ----sepsis-cotab, fig.cap="Conditional association plot", out.width=".5\\linewidth"----
 library(vcd)
 cotabplot(d, 1)
 
@@ -179,10 +179,23 @@ car::Anova(m, type = "III")
 exp(confint(m))
 
 ## ------------------------------------------------------------------------
-pvals <- c(0.047, 0.0167, 0.015)
+pvals <- c(0.047, 0.0167, 0.015)  ## scenario 1
 p.adjust(pvals, method = "bonferroni")
 
 ## ------------------------------------------------------------------------
 f <- function(x) (1-(1-x)^length(x))
 f(pvals)
+
+## ------------------------------------------------------------------------
+p.adjust(pvals, method = "holm")
+
+## ------------------------------------------------------------------------
+pvals <- c(0.047, 0.027, 0.015)  ## scenario 2
+p.adjust(pvals, method = "holm")
+p.adjust(pvals, method = "hommel")
+
+## ------------------------------------------------------------------------
+pvals <- c(0.053, 0.026, 0.017)  ## scenario 3
+p.adjust(pvals, method = "hochberg")
+p.adjust(pvals, method = "hommel")
 
