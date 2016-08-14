@@ -1,4 +1,4 @@
-## ----echo=FALSE----------------------------------------------------------
+## ----echo=FALSE, cache=FALSE---------------------------------------------
 library(Hmisc)
 library(xtable)
 library(memisc)
@@ -198,4 +198,25 @@ p.adjust(pvals, method = "hommel")
 pvals <- c(0.053, 0.026, 0.017)  ## scenario 3
 p.adjust(pvals, method = "hochberg")
 p.adjust(pvals, method = "hommel")
+
+## ------------------------------------------------------------------------
+tmp <- matrix(c(0.25,10,0.58,0.29,10,0.71,0.35,
+                0.5,10,0.62,0.31,10,0.88,0.33,
+                0.75,10,0.51,0.33,10,0.73,0.36,
+                1,10,0.34,0.27,10,0.68,0.29,
+                2,10,-0.06,0.22,10,0.37,0.25,
+                3,10,0.05,0.23,10,0.43,0.28),
+                nrow = 6, byrow = TRUE)
+colnames(tmp) <- c("time", "N0", "Mean0", "SD0", "N1", "Mean1", "SD1")                
+d <- melt(as.data.frame(tmp), id.vars = 1, measure.vars = c(3,4,6,7))         
+
+## ----fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3----
+r <- ddply(dcast(d, time ~ variable), "time", mutate, 
+           diff = Mean1 - Mean0, se = (1/10+1/10)*(SD0^2+SD1^2)/2)
+p <- ggplot(r, aes(x = time, y = diff))
+p <- p + geom_errorbar(aes(ymin = diff - qt(0.975, 20-2) * se, 
+                           ymax = diff + qt(0.975, 20-2) * se), width=.1)
+p <- p + geom_line() + geom_point() 
+p <- p + scale_x_continuous(breaks = seq(0, 3, by = 1)) + geom_hline(aes(yintercept = 0))
+p + labs(x = "Time (hours)", y = "Treatment difference (95% CI)")
 
