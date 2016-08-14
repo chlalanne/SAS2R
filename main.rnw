@@ -1,5 +1,5 @@
-%% Time-stamp: <2016-08-14 14:27:12 chl>
-\documentclass[10pt,a4paper]{article}
+%% Time-stamp: <2016-08-14 18:27:14 chl>
+\documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
 \usepackage{bera}
@@ -11,7 +11,8 @@
 \usepackage{subfig}
 \usepackage[utf8]{inputenc}
 \usepackage[compress]{natbib}
-\newcommand{\R}{\textsf{R}\xspace}
+\usepackage{wallpaper}
+\usepackage{transparent}
 \usepackage[parfill]{parskip}
 \setlength\parindent{0pt}
 \usepackage{hyperref}
@@ -22,7 +23,34 @@
             pdfauthor={Christophe Lalanne},
             pdfkeywords={SAS, R, Stata, biostatistics, clinical trials}}
 
+\newcommand{\R}{\textsf{R}\xspace}
+
+\newcommand*{\titleLL}{\begingroup% 
+\fboxsep 0.5\baselineskip
+\sffamily
+\vspace*{0.1\textheight}
+\centering
+{\textcolor{Coral}{\Huge STATISTICS FOR CLINICAL TRIALS}}\par
+\vspace{0.1\textheight}
+{\transparent{0.5}\colorbox{DarkSlateGray}{\transparent{1}\textcolor{white}{\normalfont\itshape\huge
+                Applications using R}}}\par
+\vspace{0.1\textheight}
+{\LARGE \textcolor{DarkSlateGray}{Christophe Lalanne}}\par
+\vfill
+{\includegraphics[scale=.75]{logo}\\ {\small \textcolor{DarkSlateGray}{\tt \gitAbbrevHash{}}}}\par
+\vspace*{0.1\textheight}
+\endgroup}
+
+
 \begin{document}
+\pagestyle{empty}
+
+\ThisTileWallPaper{\paperwidth}{\paperheight}{congruent_pentagon.png}
+\titleLL
+
+\cleardoublepage
+\newpage
+
 
 <<setup, include=FALSE, purl=FALSE>>=
 require(knitr)
@@ -44,7 +72,7 @@ theme_set(theme_bw())
 
 \section*{Foreword}
 
-Statistical analysis carried outwere done using
+Statistical analysis were done using
 \Sexpr{sessionInfo()$R.version$version.string}, which is freely available from
 \href{http://cran.r-project.org}{CRAN}. You may find convenient to run \R
 through \href{http://www.rstudio.com}{RStudio}. RStudio offers really great
