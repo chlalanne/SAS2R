@@ -1,4 +1,4 @@
-%% Time-stamp: <2016-07-17 20:59:42 chl>
+%% Time-stamp: <2016-08-14 14:27:12 chl>
 \documentclass[10pt,a4paper]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -524,7 +524,46 @@ p.adjust(pvals, method = "hommel")
 
 One can also look into the \texttt{cherry} package \citep{goeman11} whose
 vignette includes a comparison of Simes vs. Hommel or Fisher approach to
-multiple testing, as well as example of closed testing methods. 
+multiple testing, as well as examples of closed testing methods. 
+
+
+\subsection{The allergen-induced asthma trial}
+
+\paragraph{Context.} Data comes from a trial designed to assess the efficacy
+profile of a bronchodilator in allergen-induced asthma. There are 20 patients
+that were randomly assigned to receive either an experimental drug or a placebo
+\citep{taylor91}. The forced expiratory volume in one second (FEV) was used to
+measure how the drug attenuated bronchoconstriction, and FEV curves were
+averaged at each time point in both groups (Table~\ref{tab:fev}). The
+therapeutic effect was the time to the onset of action--that is, the first time
+point at which clinically and statistically significant separation between the
+FEV curves is observed.
+
+Beside stepwise approaches relying on data-driven ordering of $p$-values--this
+is also known as closed testing--fixed-sequence testing methods are used when we
+are interested in prespecified sequences of hypotheses. This is illustrated in
+the next example.
+
+\begin{table}[!htbp]
+\centering
+\begin{tabular}{ccrrcrr}
+\toprule
+  \multicolumn{1}{c}{} & \multicolumn{3}{c}{Experimental drug} & \multicolumn{3}{c}{Placebo} \\
+  \cline{2-7} \\
+  Time (hours) & n & \multicolumn{1}{c}{Mean} & \multicolumn{1}{c}{SD} & n & \multicolumn{1}{c}{Mean} & \multicolumn{1}{c}{SD} \\
+  \midrule
+  0.25 & 10 & 0.58 & 0.29 & 10 & 0.71 & 0.35 \\
+  0.5  & 10 & 0.62 & 0.31 & 10 & 0.88 & 0.33 \\
+  0.75 & 10 & 0.51 & 0.33 & 10 & 0.73 & 0.36 \\
+  1    & 10 & 0.34 & 0.27 & 10 & 0.68 & 0.29 \\
+  2    & 10 & -0.06 & 0.22 & 10 & 0.37 & 0.25 \\
+  3    & 10 & 0.05 & 0.23 & 10 & 0.43 & 0.28 \\
+  \bottomrule
+\end{tabular}
+\caption{Reduction in FEV measurements from baseline by time after the allergen challenge}
+\label{tab:fev}
+\end{table}
+
 
 \clearpage
 \bibliographystyle{plainnat}
