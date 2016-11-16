@@ -1,4 +1,4 @@
-%% Time-stamp: <2016-08-14 20:27:00 chl>
+%% Time-stamp: <2016-11-16 13:35:35 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -75,12 +75,12 @@ theme_set(theme_bw())
 Statistical analysis were done using
 \Sexpr{sessionInfo()$R.version$version.string}, which is freely available from
 \href{http://cran.r-project.org}{CRAN}. You may find convenient to run \R
-through \href{http://www.rstudio.com}{RStudio}. RStudio offers really great
-support for editing and running \R scripts. You can even organize your work into
-a project, with version control and automatic reporting built on the fly. I
-personally choose to work like in the 80s-- although I was just a kid at that
-time--with a simple text editor and an interactive shell available within few
-key presses. This is possible thanks to
+through \href{http://www.rstudio.com}{RStudio}. Indeed, RStudio offers really
+great support for editing and running \R scripts. You can even organize your
+work into a project, with version control and automatic reporting built on the
+fly. I personally choose to work like in the 80s-- although I was just a kid at
+that time--with a simple text editor and an interactive shell available within
+few key presses. This is possible thanks to
 \href{https://www.gnu.org/software/emacs/}{Emacs} and the brilliant
 \href{http://ess.r-project.org}{ESS} mode.
 
@@ -613,16 +613,23 @@ Note that it is quite easy to go back to the matrix form by using
 
 <<fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3>>=
 r <- ddply(dcast(d, time ~ variable), "time", mutate, 
-           diff = Mean1 - Mean0, se = (1/10+1/10)*(SD0^2+SD1^2)/2)
+           diff = Mean1 - Mean0, se = sqrt((1/10+1/10)*(SD0^2+SD1^2)/2))
 p <- ggplot(r, aes(x = time, y = diff))
-p <- p + geom_errorbar(aes(ymin = diff - qt(0.975, 20-2) * se, 
-                           ymax = diff + qt(0.975, 20-2) * se), width=.1)
 p <- p + geom_line() + geom_point() 
-p <- p + scale_x_continuous(breaks = seq(0, 3, by = 1)) + geom_hline(aes(yintercept = 0))
-p + labs(x = "Time (hours)", y = "Treatment difference (95% CI)")
+p <- p + geom_line(aes(x = time, y = diff - qt(0.95, 20-2) * se), linetype = 2)
+p <- p + scale_x_continuous(breaks = seq(0, 3, by = 1)) 
+p <- p + scale_y_continuous(breaks = seq(-0.2, 0.5, by = 0.1)) 
+p <- p + geom_hline(aes(yintercept = 0))
+p + labs(x = "Time (hours)", y = "Treatment difference (95% Lower CI)")
 @ 
 
-
+To display error bars instead of the lower bound for the 95\% confidence
+interval, we would use:
+<<eval = FALSE>>=
+p <- p + geom_errorbar(aes(ymin = diff - qt(0.975, 20-2) * se,
+                           ymax = diff + qt(0.975, 20-2) * se,), 
+                       width=.1)
+@ 
 
 \clearpage
 \bibliographystyle{plainnat}
