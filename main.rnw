@@ -1,4 +1,4 @@
-%% Time-stamp: <2016-11-16 13:35:35 chl>
+%% Time-stamp: <2017-05-11 10:23:14 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -604,16 +604,22 @@ tmp <- matrix(c(0.25,10,0.58,0.29,10,0.71,0.35,
                 2,10,-0.06,0.22,10,0.37,0.25,
                 3,10,0.05,0.23,10,0.43,0.28),
                 nrow = 6, byrow = TRUE)
-colnames(tmp) <- c("time", "N0", "Mean0", "SD0", "N1", "Mean1", "SD1")                
-d <- melt(as.data.frame(tmp), id.vars = 1, measure.vars = c(3,4,6,7))         
+colnames(tmp) <- c("time", "N0", "Mean0", "SD0", "N1", "Mean1", "SD1")
+d <- melt(as.data.frame(tmp), id.vars = 1, measure.vars = c(3,4,6,7))
 @ 
 
 Note that it is quite easy to go back to the matrix form by using
 \texttt{dcast} as shown below: 
-
-<<fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3>>=
+<<>>=
 r <- ddply(dcast(d, time ~ variable), "time", mutate, 
            diff = Mean1 - Mean0, se = sqrt((1/10+1/10)*(SD0^2+SD1^2)/2))
+@ 
+
+In what follows, we compute the lowest bound of a 95\% confidence interval and
+display its value at consecutive time points. This amounts to looking at results
+from sequential testing, i.e. determine the first statistically significant
+difference. Equivalently, we could rely on simple Student $t$-test.
+<<fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3>>=
 p <- ggplot(r, aes(x = time, y = diff))
 p <- p + geom_line() + geom_point() 
 p <- p + geom_line(aes(x = time, y = diff - qt(0.95, 20-2) * se), linetype = 2)
@@ -623,13 +629,19 @@ p <- p + geom_hline(aes(yintercept = 0))
 p + labs(x = "Time (hours)", y = "Treatment difference (95% Lower CI)")
 @ 
 
-To display error bars instead of the lower bound for the 95\% confidence
-interval, we would use:
+Note that to display error bars instead of the lower bound for the 95\%
+confidence interval, we would use:
 <<eval = FALSE>>=
 p <- p + geom_errorbar(aes(ymin = diff - qt(0.975, 20-2) * se,
-                           ymax = diff + qt(0.975, 20-2) * se,), 
-                       width=.1)
+                           ymax = diff + qt(0.975, 20-2) * se), 
+                       width = .1)
 @ 
+
+This approach, however, does not control the familywise error rate. Looking at
+treatment differences from the last measurement to the first (``step-down''
+approach) suggests that a significant difference at one hour, and not 30 minutes
+as in the previous case.
+
 
 \clearpage
 \bibliographystyle{plainnat}

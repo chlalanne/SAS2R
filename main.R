@@ -210,13 +210,21 @@ tmp <- matrix(c(0.25,10,0.58,0.29,10,0.71,0.35,
 colnames(tmp) <- c("time", "N0", "Mean0", "SD0", "N1", "Mean1", "SD1")                
 d <- melt(as.data.frame(tmp), id.vars = 1, measure.vars = c(3,4,6,7))         
 
-## ----fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3----
+## ------------------------------------------------------------------------
 r <- ddply(dcast(d, time ~ variable), "time", mutate, 
-           diff = Mean1 - Mean0, se = (1/10+1/10)*(SD0^2+SD1^2)/2)
+           diff = Mean1 - Mean0, se = sqrt((1/10+1/10)*(SD0^2+SD1^2)/2))
+
+## ----fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3----
 p <- ggplot(r, aes(x = time, y = diff))
-p <- p + geom_errorbar(aes(ymin = diff - qt(0.975, 20-2) * se, 
-                           ymax = diff + qt(0.975, 20-2) * se), width=.1)
 p <- p + geom_line() + geom_point() 
-p <- p + scale_x_continuous(breaks = seq(0, 3, by = 1)) + geom_hline(aes(yintercept = 0))
-p + labs(x = "Time (hours)", y = "Treatment difference (95% CI)")
+p <- p + geom_line(aes(x = time, y = diff - qt(0.95, 20-2) * se), linetype = 2)
+p <- p + scale_x_continuous(breaks = seq(0, 3, by = 1)) 
+p <- p + scale_y_continuous(breaks = seq(-0.2, 0.5, by = 0.1)) 
+p <- p + geom_hline(aes(yintercept = 0))
+p + labs(x = "Time (hours)", y = "Treatment difference (95% Lower CI)")
+
+## ----eval = FALSE--------------------------------------------------------
+## p <- p + geom_errorbar(aes(ymin = diff - qt(0.975, 20-2) * se,
+##                            ymax = diff + qt(0.975, 20-2) * se),
+##                        width = .1)
 

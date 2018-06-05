@@ -1,0 +1,11 @@
+
+** TODO Check and complete section 1
+** TODO Update TeX template
+** TODO Update ggplot2 theme
+
+* Task list [0/4]
+
+- [ ] #stata sepsis.do
+- [ ] #stata asthma.do
+- [ ] data/asthma.{csv,dta}
+- [ ] data/sepsis.{csv,dta} 
