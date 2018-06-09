@@ -1,7 +1,9 @@
 
 ** TODO Check and complete section 1
 ** TODO Update TeX template
-** TODO Update ggplot2 theme
+** DONE Update ggplot2 theme
+** TODO Remove plyr dependency
+** TODO Linting + cleanup
 
 * Task list [0/4]
 

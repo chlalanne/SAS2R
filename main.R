@@ -5,8 +5,10 @@ library(memisc)
 library(rms)
 library(reshape2)
 library(ggplot2)
+library(hrbrthemes)
 library(plyr)
-theme_set(theme_bw())
+theme_set(theme_ipsum(base_size = 11))
+options(digits = 6, show.signif.stars = FALSE)
 
 ## ----01-load-------------------------------------------------------------
 raw <- textConnection("
@@ -31,10 +33,10 @@ names(d) <- c("center", "drug", "change")
 d$change <- as.numeric(as.character(d$change))
 d$drug <- relevel(d$drug, ref = "P")
 
-## ----hamd-xyplot, fig.cap="Distribution of change scores in each centre", fig.width=6, fig.height=3----
+## ----hamd-xyplot, fig.cap="Distribution of change scores in each centre", fig.width=8, fig.height=4----
 p <- ggplot(data = d, aes(x = drug, y = change))
-p <- p + geom_jitter(width = .2)
-p <- p + geom_smooth(aes(group = 1), method = "lm", se = FALSE, colour = "grey30")
+p <- p + geom_jitter(width = .2, color = grey(.3))
+p <- p + geom_smooth(aes(group = 1), method = "lm", se = FALSE, colour = "lightcoral")
 p + facet_grid(~ center) + labs(x = "Drug type", y = "HAMD17 change") 
 
 ## ------------------------------------------------------------------------
@@ -48,11 +50,11 @@ latex(s, file = "", title = "", caption = "Mean HAMD17 change by drug, center",
       insert.bottom = "Only 3 out of 5 centres are shown.", 
       table.env = TRUE, ctable = TRUE, size = "small", digits = 2)
 
-## ----hamd-delta, fig.cap="Average difference between drug and placebo in each centre", fig.width=6, fig.height=3----
+## ----hamd-delta, fig.cap="Average difference between drug and placebo in each centre", fig.width=8, fig.height=4----
 r <- ddply(d, "center", summarize, 
            delta = mean(change[drug == "D"]) - mean(change[drug == "P"]))
 p <- ggplot(data = r, aes(x = center, y = delta))
-p <- p + geom_point() + geom_hline(yintercept = 0, linetype = 2, colour = "grey30")
+p <- p + geom_point() + geom_hline(yintercept = 0, linetype = 2, colour = grey(.3))
 p + labs(x = "Center", y = "Difference D-P")
 
 ## ------------------------------------------------------------------------
@@ -76,7 +78,7 @@ car::Anova(m, type ="III")
 drop1(m, scope = ~ ., test = "F")
 
 ## ----echo=FALSE----------------------------------------------------------
-print(xtable(anova(m)), file = "s1.tex", floating = FALSE, booktabs = TRUE)
+print(xtable(anova(m)[,c(2,1,4,5)]), file = "s1.tex", floating = FALSE, booktabs = TRUE)
 print(xtable(car::Anova(m, type = "II")), file = "s2.tex", floating = FALSE, booktabs = TRUE)
 print(xtable(car::Anova(m, type = "III")[-1,]), file = "s3.tex", floating = FALSE, booktabs = TRUE)
 
@@ -101,7 +103,7 @@ with(d, qualint(change, drug, center, test = "LRT"))
 r <- with(d, qualint(change, drug, center, test = "IBGA", plotout = TRUE))
 
 ## ----02-load-------------------------------------------------------------
-source("./urininc.R")
+source("R/urininc.R")
 str(d)
 
 ## ------------------------------------------------------------------------
@@ -113,9 +115,13 @@ latex(s, file = "", title = "", caption = "Mean change in number of incontinence
       table.env = TRUE, ctable = TRUE, size = "small", digits = 3)
 
 ## ----urininc-density, fig.cap="Density estimates for the percent change in frequency of incontinence episodes", fig.width=9, fig.height=3----
-p <- ggplot(data = d, aes(x = change, colour = group))
-p <- p + geom_line(stat = "density", adjust = 1.2) + facet_grid(~ strata)
-p + scale_x_continuous(limits = c(-100, 150)) + labs(x = "Percent change", y = "Density")
+p <- ggplot(data = d, aes(x = change, color = group)) + 
+     geom_line(stat = "density", adjust = 1.2) + 
+     facet_wrap(~ strata, ncol = 3) +
+     scale_color_manual("Group", values = c("steelblue", "orange")) +
+     scale_x_continuous(limits = c(-100, 150)) + 
+     labs(x = "Percent change", y = "Density")
+p
 
 ## ------------------------------------------------------------------------
 library(coin)
@@ -149,9 +155,9 @@ dim(d)
 ftable(d)
 
 ## ----echo=FALSE, results="asis"------------------------------------------
-toLatex(ftable(d, row.vars = 1, col.vars = c(3,2)))
+toLatex(ftable(d, row.vars = 1, col.vars = c(3,2)), digits = 0)
 
-## ----sepsis-dotplot, fig.cap="Proportion of patients who died by the end of the study", fig.width=4, fig.height=3----
+## ----sepsis-dotplot, fig.cap="Proportion of patients who died by the end of the study", fig.width=8, fig.height=4----
 dd <- as.data.frame(ftable(d))
 r <- ddply(dd, c("strata", "group"), mutate, prop = Freq/sum(Freq))
 p <- ggplot(subset(r, status == "Dead"), aes(x = prop, y = group))
@@ -207,14 +213,14 @@ tmp <- matrix(c(0.25,10,0.58,0.29,10,0.71,0.35,
                 2,10,-0.06,0.22,10,0.37,0.25,
                 3,10,0.05,0.23,10,0.43,0.28),
                 nrow = 6, byrow = TRUE)
-colnames(tmp) <- c("time", "N0", "Mean0", "SD0", "N1", "Mean1", "SD1")                
-d <- melt(as.data.frame(tmp), id.vars = 1, measure.vars = c(3,4,6,7))         
+colnames(tmp) <- c("time", "N0", "Mean0", "SD0", "N1", "Mean1", "SD1")
+d <- melt(as.data.frame(tmp), id.vars = 1, measure.vars = c(3,4,6,7))
 
 ## ------------------------------------------------------------------------
 r <- ddply(dcast(d, time ~ variable), "time", mutate, 
            diff = Mean1 - Mean0, se = sqrt((1/10+1/10)*(SD0^2+SD1^2)/2))
 
-## ----fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=4, fig.height=3----
+## ----fev-xyplot, fig.cap="Treatment comparisons in the asthma study", fig.width=8, fig.height=4----
 p <- ggplot(r, aes(x = time, y = diff))
 p <- p + geom_line() + geom_point() 
 p <- p + geom_line(aes(x = time, y = diff - qt(0.95, 20-2) * se), linetype = 2)
