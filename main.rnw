@@ -1,4 +1,4 @@
-%% Time-stamp: <2018-06-09 21:25:58 chl>
+%% Time-stamp: <2018-06-13 12:28:08 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -116,7 +116,7 @@ d$change <- as.numeric(as.character(d$change))
 d$drug <- relevel(d$drug, ref = "P")
 @ 
 
-Briefly, the idea is to copy and paste the SAS \texttt{DATALINES} instruction as raw text and to \texttt{scan} the flow of characters. The next bit of code uses \texttt{matrix} to arrange the data into a tabular dataset with 3 columns corresponding to center, drug and change score. When transforming this table to a data frame, \texttt{center} and \texttt{drug} will be converted to factors but we need to handle the proper conversion of \texttt{change} to numerical values. Also, note that we set the reference category to the Placebo group to simplify things a bit.
+Briefly, the idea is to copy and paste the SAS \texttt{DATALINES} instructions provided in the textbook as raw text and to \texttt{scan} the flow of characters. This works quite well when there is not too much data. Otherwise, it is better to store the data in text file and read it in R directly. The next bit of code uses \texttt{matrix} to arrange the data into a tabular dataset with 3 columns corresponding to center, drug and change score. When transforming this table to a data frame, \texttt{center} and \texttt{drug} will be converted to factors but we need to handle the proper conversion of \texttt{change} to numerical values. Also, note that we set the reference category to the Placebo group to simplify things a bit.
 
 Some basic exploratory graphical analysis follows. In the next chunk, we display the raw data for each centre and highlight the difference between drug and placebo using a trend line (Figure~\ref{fig:hamd-xyplot}). Note the use of \texttt{aes(group = 1)} when calling \texttt{geom\_smooth} as there is no real grouping variable in the data structure other than the ones that are already used (\texttt{drug} on the $x$-axis and \texttt{center} for facetting).
 
@@ -129,7 +129,7 @@ p <- ggplot(data = d, aes(x = drug, y = change)) +
 p
 @ 
 
-Using \texttt{Hmisc} package, we can easily build a Table of summary statistics by drug and center. For simplicity, we will limit the display to the first 3 centers in Table~\ref{tab:hamd-desc}.
+Using the \texttt{Hmisc} package, we can easily build a Table of summary statistics by drug and center. For simplicity, the display is limited to the first 3 centers in Table~\ref{tab:hamd-desc}. Note that some of the formatting options are handled directly in the \texttt{print} or \texttt{latex} function, which is masked in the following code chunk.
 
 <<>>=
 fm <- change ~ drug + center
@@ -144,8 +144,9 @@ latex(s, file = "", title = "", caption = "Mean HAMD17 change by drug, center",
       table.env = TRUE, ctable = TRUE, size = "small", digits = 2)
 @ 
 
-Let's consider average change scores by center, which are displayed in Figure~\ref{fig:hamd-delta}. First, we need to compute the average score in each group, and then compute the difference between the two (called \texttt{delta}). This could be done with Hmisc \texttt{summarize} command, but we will rely on the \texttt{plyr} package and its \texttt{ddply} command. What is important is that the results are returned as a data frame to facilitate the use of \texttt{ggplot} data structure in turn.
+Let us consider the average change scores by center, which are displayed in Figure~\ref{fig:hamd-delta}. First, we need to compute the average score in each group, and then compute the difference between the two (\texttt{delta}). This could be done with Hmisc \texttt{summarize} command, but we will rely on the \texttt{plyr} package and its \texttt{ddply} command. What is important is that the results are returned as a data frame to facilitate the use of \texttt{ggplot} data structure in turn.
 
+% FIXME Replace plyr code awith Hmisc::summarize
 <<hamd-delta, fig.cap="Average difference between drug and placebo in each centre", fig.width=8, fig.height=4>>=
 r <- ddply(d, "center", summarize, 
            delta = mean(change[drug == "D"]) - mean(change[drug == "P"]))
@@ -156,17 +157,10 @@ p <- ggplot(data = r, aes(x = center, y = delta)) +
 p
 @ 
 
-Now comes the modeling stage. First, we will analyse the primary endpoint using fixed-effect models. \citet{dmitrienko05} provide all the maths that are necessary to understand how to derive various types of sum of squares, and this is further addressed in, e.g., REF., or on \href{http://crossvalidated.com}{Stack Exchange}.
-
-% FIXME add references
-
-Let us first update the formula we used for producing Table~\ref{tab:hamd-desc} to incorporate an interaction term, \texttt{drug:center} (in \R, \texttt{drug * center} will expand to \texttt{drug + center + drug:center}):
+Now comes the modeling stage. First, we will analyse the primary endpoint using fixed-effect models. \citet{dmitrienko05} provide all the maths that are necessary to understand how to derive various types of sum of squares, and this is further addressed in, e.g., \citep{christensen-2002-plane-answer}. Let us first update the formula we used for producing Table~\ref{tab:hamd-desc} to allow for an interaction term between \texttt{drug} and \texttt{center}, which is denoted as \texttt{drug:center} in \R. Of note, in \R, \texttt{drug * center} will expand to \texttt{drug + center + drug:center}:
 
 <<>>=
 fm <- change ~ drug * center
-@ 
-
-<<>>=
 replications(change ~ drug:center, data = d)
 @
 
@@ -180,7 +174,7 @@ m <- lm(fm, data = d)
 anova(m)
 @ 
 
-The \texttt{car} package allows to work with Type II and Type III SS. Type III SSs, also called partial or Yates' weighted squares of means are the default in Stata, SPSS or SAS. Stata does not even offer Type II SS. So, if we are interested in computing Type II sum of squares in \R, we could call \texttt{Anova} like this:
+The \texttt{car} package allows to work with both Type II and Type III SS. Type III SSs, also called partial or Yates' weighted squares of means are the default in Stata, SPSS or SAS. Stata does not even offer Type II SS. So, if we are interested in computing Type II sum of squares in \R using \texttt{car}, we could call \texttt{Anova} like this:
 
 <<>>=
 car::Anova(m, type = "II")
@@ -192,7 +186,7 @@ Type III analysis is readily obtained by replacing \texttt{type = "II"} with \te
 car::Anova(m, type ="III")
 @ 
 
-Note that in the case of Type III SS, we can also use the base command \texttt{drop1} and we will get similar results:
+Note that in the case of Type II SS, we can also use the base command \texttt{drop1} and we will get similar results:
 
 <<>>=
 drop1(m, scope = ~ ., test = "F")
@@ -208,7 +202,7 @@ print(xtable(car::Anova(m, type = "II")), file = "s2.tex", floating = FALSE, boo
 print(xtable(car::Anova(m, type = "III")[-1,]), file = "s3.tex", floating = FALSE, booktabs = TRUE)
 @
 
-\paragraph{Remark.} Here is how we could compute the parameter estimates and the SS corresponding to the drug effect in the case of a Type III analysis. The code follows that posted on \href{http://stats.stackexchange.com/a/69367/930}{Stack Exchange}, with minor adaptation. How this works is quite simple: We first get the design matrix stored in our model \texttt{m} and then solve the ``normal equations'' $(X'X) \hat \beta = X'y$ in order to get $\hat \beta = (X'X)^{-1}X'y$.
+\paragraph{Remark.} Here is how we could compute the parameter estimates and the SS corresponding to the drug effect in the case of a Type III analysis. The code follows what was posted on \href{http://stats.stackexchange.com/a/69367/930}{Stack Exchange}, with minor adaptation. How this works is quite simple: We first get the design matrix stored in our model \texttt{m} and then solve the ``normal equations'' $(X'X) \hat \beta = X'y$ in order to get $\hat \beta = (X'X)^{-1}X'y$.
 
 <<>>=
 D <- model.matrix(m)                            ## design matrix
