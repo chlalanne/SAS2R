@@ -1,4 +1,4 @@
-%% Time-stamp: <2018-06-13 12:28:08 chl>
+%% Time-stamp: <2018-06-13 21:43:54 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -233,10 +233,8 @@ The authors later used the Gail-Simon test\citep{gail85} to test for qualitative
 library(QualInt)
 with(d, qualint(change, drug, center, test = "LRT"))
 @ 
-This R package even provides a graphical method when specifying options
-\texttt{test = "IBGA"} and \texttt{plotout = TRUE} (Figure~\ref{fig:hamd-ibga}).
-The IBGA method relies on simultaneous 95\% confidence intervals as described in
-\citet{pan97}. 
+
+This R package even provides a graphical method when specifying options \texttt{test = "IBGA"} and \texttt{plotout = TRUE} (Figure~\ref{fig:hamd-ibga}). The IBGA method relies on simultaneous 95\% confidence intervals as described in \citet{pan97}. The \texttt{multcomp} package also allows for simultaneous CIs albeit they are often used for testing multiple contrasts in ANOVA-like settings.
 
 % FIXME Can't we really change the default color scale, e.g. add + scale_color_ipsum()?
 
@@ -269,7 +267,7 @@ latex(s, file = "", title = "", caption = "Mean change in number of incontinence
       table.env = TRUE, ctable = TRUE, size = "small", digits = 3)
 @ 
 
-As can be seen, there is a higher number of missing values in strata 2 (around 20\% in both groups) and larger variations on average between the two group in the third strata. Next, we displayed the distribution of the percent change in frequency of incontinence episodes as density curves in Figure~\ref{fig:urininc-density}. Instead of relying on \texttt{geom\_density}, we use the rather generic \texttt{geom\_lines} with an extra \texttt{stat=} parameter.
+As can be seen, there is a higher number of missing values in strata 2 (around 20\% in both groups) and larger variations on average between the two groups in the third strata. Next, we displayed the distribution of the percent change in frequency of incontinence episodes as density curves in Figure~\ref{fig:urininc-density}. Instead of relying on \texttt{geom\_density}, we use the rather generic \texttt{geom\_lines} with an extra \texttt{stat=} parameter.
 
 <<urininc-density, fig.cap="Density estimates for the percent change in frequency of incontinence episodes", fig.width=9, fig.height=3>>=
 p <- ggplot(data = d, aes(x = change, color = group)) + 
@@ -286,14 +284,14 @@ The authors used the van Elteren test \citep{elteren60}, which can be regarded a
 <<>>=
 library(coin)
 dc <- subset(d, complete.cases(d))
-independence_test(change ~ group | strata, data = dc, 
-                  ytrafo = function(data) trafo(data, numeric_trafo = rank, 
-                                                block = dc$strata), 
+independence_test(change ~ group | strata, data = dc,
+                  ytrafo = function(data) trafo(data, numeric_trafo = rank,
+                                                block = dc$strata),
                   teststat = "quad")
 @ 
 % $ Emacs noweb and syntax highlighting sucks here
 
-Although we get different results from the authors, we would reach the same conclusion, namely that there is an effect of the treatment on the outcome after adjusting for the centre effect. We will get, however, closer results ($p=0.02369$ for the row mean squares test statistic) if we simply remove the \texttt{scores=} option when calling SAS \texttt{PROC FREQ} \citep{stokes12}:
+Although we get different results as those reported by the authors, we would reach the same conclusion, namely that there is an effect of the treatment on the outcome after adjusting for the centre effect. We will get, however, closer results ($p=0.02369$ for the row mean squares test statistic) if we simply remove the \texttt{scores=} option when calling SAS \texttt{PROC FREQ} \citep{stokes12}:
 
 \begin{verbatim}
 PROC FREQ;
@@ -321,7 +319,6 @@ To enter the data in \R, we will input individual values of the three-way Table 
 varnames <- list(strata = 1:4,
                  status = c("Dead", "Alive", "Total"),
                  group = c("Experimental", "Placebo"))
-                 
 d <- array(c(33,49,48,80,185,169,156,130,218,218,204,210,
              26,57,58,118,189,165,104,123,215,222,162,241),
            dim = c(4,3,2), dimnames = varnames)
@@ -375,7 +372,7 @@ library(vcd)
 cotabplot(d, 1)
 @ 
 
-Based on a logistic regression model, the authors presented a summary of a Type III analysis of effects. Here is what can be done in R. First, we will slightly re arrange the data table so that we have a working data frame with total counts for success (here, dead patients) and failure (here, patients still alive) in separate columns, together with columns describing strata and treatment levels.
+Based on a logistic regression model, the authors presented a summary of a Type III analysis of effects. Here is what can be done in R. First, we will slightly re arrange the data table so that we have a working data frame with total counts for successes (here, dead patients) and failure (patients still alive) in separate columns, together with columns describing strata and treatment levels.
 
 <<>>=
 n <- rbind(d[,1:2,1], d[,1:2,2])
@@ -386,7 +383,7 @@ n$group <- gl(2, 4, labels = c("Experimental", "Placebo"))
 n$group <- relevel(n$group, ref = "Placebo")
 @ 
 
-Then, wince we are working with grouped or aggregated data, we will use the \texttt{cbind()} option to R's \texttt{glm}, as shown below. Note that we also ask to use SAS treatment contrast for the \texttt{strata} factor, in order to ensure that the fourth level is used as the reference category. Type III analysis is readily available within the \texttt{car} package.
+Then, since we are working with grouped or aggregated data, we will use the \texttt{cbind()} option in R's \texttt{glm} function , as shown below. Note that we also ask to use SAS treatment contrast for the \texttt{strata} factor, in order to ensure that the fourth level is used as the reference category. Type III analysis is readily available within the \texttt{car} package.
 
 <<>>=
 m <- glm(cbind(Dead,Alive) ~ group + strata, data = n, family = binomial,
