@@ -1,4 +1,4 @@
-%% Time-stamp: <2018-06-13 21:43:54 chl>
+%% Time-stamp: <2018-06-25 17:47:25 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -68,7 +68,6 @@ library(rms)
 library(reshape2)
 library(ggplot2)
 library(hrbrthemes)
-library(plyr)
 theme_set(theme_ipsum(base_size = 11))
 options(digits = 6, show.signif.stars = FALSE)
 @ 
@@ -146,11 +145,10 @@ latex(s, file = "", title = "", caption = "Mean HAMD17 change by drug, center",
 
 Let us consider the average change scores by center, which are displayed in Figure~\ref{fig:hamd-delta}. First, we need to compute the average score in each group, and then compute the difference between the two (\texttt{delta}). This could be done with Hmisc \texttt{summarize} command, but we will rely on the \texttt{plyr} package and its \texttt{ddply} command. What is important is that the results are returned as a data frame to facilitate the use of \texttt{ggplot} data structure in turn.
 
-% FIXME Replace plyr code awith Hmisc::summarize
 <<hamd-delta, fig.cap="Average difference between drug and placebo in each centre", fig.width=8, fig.height=4>>=
-r <- ddply(d, "center", summarize, 
-           delta = mean(change[drug == "D"]) - mean(change[drug == "P"]))
-p <- ggplot(data = r, aes(x = center, y = delta)) +
+m <- with(d, summarize(change, llist(drug, center), mean))
+r <- aggregate(change ~ center, m, diff)
+p <- ggplot(data = r, aes(x = center, y = change)) +
      geom_point() +
      geom_hline(yintercept = 0, linetype = 2, colour = grey(.3)) +
      labs(x = "Center", y = "Difference D-P")
