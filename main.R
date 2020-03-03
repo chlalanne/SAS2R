@@ -4,9 +4,10 @@ library(xtable)
 library(memisc)
 library(rms)
 library(reshape2)
+library(plyr)
 library(ggplot2)
 library(hrbrthemes)
-theme_set(theme_ipsum(base_size = 11))
+theme_set(theme_ipsum(base_family = "Bitstream Vera Sans", base_size = 11))
 options(digits = 6, show.signif.stars = FALSE)
 
 
@@ -57,7 +58,7 @@ latex(s, file = "", title = "", caption = "Mean HAMD17 change by drug, center",
 
 
 ## ----hamd-delta, fig.cap="Average difference between drug and placebo in each centre", fig.width=8, fig.height=4----
-m <- with(d, summarize(change, llist(drug, center), mean))
+m <- with(d, Hmisc::summarize(change, llist(drug, center), mean))
 r <- aggregate(change ~ center, m, diff)
 p <- ggplot(data = r, aes(x = center, y = change)) +
      geom_point() +
@@ -115,7 +116,8 @@ with(d, qualint(change, drug, center, test = "LRT"))
 
 
 ## ----hamd-ibga, echo=FALSE, fig.cap="Average differences between drug and placebo stratified by centres", fig.width=6, fig.height=3----
-r <- with(d, qualint(change, drug, center, test = "IBGA", plotout = TRUE))
+r <- with(d, qualint(change, drug, center, test = "IBGA"))
+plot(r) # + scale_colour_ipsum()
 
 
 ## ----02-load------------------------------------------------------------------
@@ -184,7 +186,6 @@ toLatex(ftable(d, row.vars = 1, col.vars = c(3,2)), digits = 0)
 
 
 ## ----sepsis-dotplot, fig.cap="Proportion of patients who died by the end of the study", fig.width=8, fig.height=4----
-library(plyr)
 dd <- as.data.frame(ftable(d))
 r <- ddply(dd, c("strata", "group"), mutate, prop = Freq/sum(Freq))
 p <- ggplot(subset(r, status == "Dead"), aes(x = prop, y = group)) +
