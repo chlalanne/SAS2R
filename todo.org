@@ -3,11 +3,11 @@
 - [ ] #stata asthma.do
 - [ ] data/asthma.{csv,dta}
 - [ ] data/sepsis.{csv,dta}
-- [ ] TODO Check and complete section 1
-- [ ] TODO Update TeX template
-- [X] DONE Update ggplot2 theme
-- [X] TODO Remove plyr dependency
-- [X] TODO Linting + cleanup
+- [ ] Check and complete section 1
+- [ ] Update TeX template
+- [X] Update ggplot2 theme
+- [X] Remove plyr dependency
+- [X] Linting + cleanup
 
 * Inbox
 ** TODO ** TODO Check the sepsis study (why logistic reg instead of survival model?)
