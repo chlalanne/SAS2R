@@ -1,4 +1,4 @@
-%% Time-stamp: <2020-03-03 09:26:49 chl>
+%% Time-stamp: <2020-03-05 15:06:00 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -61,32 +61,42 @@ opts_chunk$set(cache=TRUE, fig.align="center", message=FALSE, warning=FALSE, siz
 @
 
 <<echo=FALSE, cache=FALSE>>=
-library(Hmisc)
+library(Hmisc)  # also lattice, ggplot2
 library(xtable)
 library(memisc)
 library(rms)
+library(multcomp)
 library(reshape2)
 library(plyr)
-library(ggplot2)
 library(hrbrthemes)
 theme_set(theme_ipsum(base_family = "Bitstream Vera Sans", base_size = 11))
-options(digits = 6, show.signif.stars = FALSE)
+options(digits = 6, show.signif.stars = FALSE, width = 100)
 @
 
+\topskip0pt
+\vspace*{\fill}
+\begin{quotation}
+\sffamily Statisticians are applied philosophers. Philosophers argue how many angels can dance on the head of a needle; statisticians count them. Or rather, count how many can probably dance. (...) We can predict nothing with certainty but we can predict how uncertain our predictions will be, on average that is. Statistics is the science that tells us how. -- Stephen Senn, \emph{Dicing with Death}
+\end{quotation}
+\vspace*{\fill}
+
+\newpage
 \section*{Foreword}
 
-Statistical analysis were done using \Sexpr{sessionInfo()$R.version$version.string}, which is freely available from \href{http://cran.r-project.org}{CRAN}. You may find convenient to run \R through \href{http://www.rstudio.com}{RStudio}. Indeed, RStudio offers really great support for editing and running \R scripts. You can even organize your work into a project, with version control and automatic reporting built on the fly. I personally choose to work with a simple text editor and an interactive shell available within few key presses. This is possible thanks to \href{https://www.gnu.org/software/emacs/}{Emacs} and the brilliant \href{http://ess.r-project.org}{ESS} mode.
+Statistical analysis were done using \Sexpr{sessionInfo()$R.version$version.string}, which is freely available from \href{http://cran.r-project.org}{CRAN}. This document started with earlier versions of R but there will not be any regression testing. You may find convenient to run \R through \href{http://www.rstudio.com}{RStudio}. Indeed, RStudio offers really great support for editing and running \R scripts. You can even organize your work into a project, with version control and automatic reporting built on the fly. I personally choose to work with a simple text editor and an interactive shell available within few key presses. This is possible thanks to \href{https://www.gnu.org/software/emacs/}{Emacs} and the brilliant \href{http://ess.r-project.org}{ESS} mode.
 
 I no longer hold a personal licence for SAS (although I could probably get an academic one) but you can try to to replicate SAS results using \href{https://www.sas.com/en_us/software/university-edition.html}{SAS University Edition}. It can run locally on your computer using \href{https://www.virtualbox.org}{Virtual Box}). In addition, I provide Stata code to replicate most if not all analyses described in this document. The code has been tested with Stata 13 but should work on any version > 10.
 
-\newpage
-\section{Analysis of Clinical Trials using SAS}
+Regarding R code, it is plain old R (if this makes any sense), that is we do not rely on the ``tidyverse'' ecosystem of packages to perform data manipulation. Instead, we will be extensively relying on the\texttt{Hmisc}and \texttt{rms} package for data aggregation, tabular outputs, and statistical modeling, as well as well established package, like \texttt{coin}, for permutation tests of statistical hypotheses. SAS being what it is, we will try to mimic the data inputting facilities whenever possible. A custom theme is used in ggplot graphics, thanks to the \texttt{hrbrthemes} package.
 
-The following analyses are based on \cite{dmitrienko05}, with data available online at \href{https://goo.gl/F5xfWq}{Analysis of Clinical Trials Using SAS: A Practical Guide}.
+\newpage
+\section{Analysis of Clinical Trials}
+
+The following analyses are based on \cite{dmitrienko05}, with data available online at \href{https://goo.gl/F5xfWq}{Analysis of Clinical Trials Using SAS: A Practical Guide}. Note that the 2nd edition of this textbook has been published in 2017. In this section, we shall focus on the analysis of continuous and discrete endpoints.
 
 \subsection{The HAMD17 study}
 
-\paragraph{Context.} This is a multi-center clinical trial comparing experimental drug vs. placebo in patients with major depression disorder. The outcome is the change from baseline after 9 weeks of acute treatment, and efficacy is measured using the total score of the Hamilton depression rating scale (17 items).
+\paragraph{Context.} This is a multi-center clinical trial comparing experimental drug vs. placebo in patients with major depression disorder. The outcome is the change from baseline after 9 weeks of acute treatment, and efficacy is measured using the total score of the Hamilton depression rating scale (17 items), also known as the HDRS score (or HAMD17 as it is called in this study) \citep{hamilton-1960-ratin}.
 
 This is a classical application of unbalanced design and potential heterogeneity between clinical centres, where there is an unequal number of observations per treatment (here, drug by center).
 
@@ -173,13 +183,19 @@ m <- lm(fm, data = d)
 anova(m)
 @
 
+A more pleasant ANOVA table can be obtained using the \texttt{rms} package, e.g.:
+
+<<eval=FALSE>>=
+anova(ols(fm, d))
+@
+
 The \texttt{car} package allows to work with both Type II and Type III SS. Type III SSs, also called partial or Yates' weighted squares of means are the default in Stata, SPSS or SAS. Stata does not even offer Type II SS. So, if we are interested in computing Type II sum of squares in \R using \texttt{car}, we could call \texttt{Anova} like this:
 
 <<>>=
 car::Anova(m, type = "II")
 @
 
-Type III analysis is readily obtained by replacing \texttt{type = "II"} with \texttt{type = "III"} as shown in the next code block. It should be noted that without altering the default contrast treatment that are used by \R, as we did in the above chunk, we would not get the correct results for the Type III analysis.
+Type III analysis is readily obtained by replacing \texttt{type = "II"} with \texttt{type = "III"} as shown in the next code block. It should be noted that without altering the default contrast treatment that are used by \R, as we did in the above chunk, we would not get the correct results for the Type III analysis:
 
 <<>>=
 car::Anova(m, type ="III")
@@ -225,6 +241,31 @@ get.ss(matrix(c(0,1,0,0,0,0,0,0,0,0), nrow = 1, ncol = 10))
 \subfloat[Type II SS]{\label{tab:tab1b}\scalebox{.64}{\input{./s2}}}
 \subfloat[Type III SS]{\label{tab:tab1c}\scalebox{.64}{\input{./s3}}}
 \end{table}
+
+Regarding specific contrast, like the average treatment difference, here is one way to compute the corresponding estimate and its standard error using the \texttt{multcomp} package:
+
+<<>>=
+summary(glht(m, mcp(drug = "Tukey", interaction_average = TRUE)))
+@
+
+% TODO Explain why it is correct in the case of Type III SS.
+
+Another approach relies on fitting a random-effect model to this dataset, whereby specifically the stratum and treatment-by-stratum interaction effects are treated as random while the treatment effect is considered fixed. Two main packages are available in \R to fit such models, \texttt{nlme} and \texttt{lme4}. A detailed overview of the two packages is available on \href{https://rpsychologist.com/r-guide-longitudinal-lme-lmer}{Kristoffer Magnusson}'s website. Here are the results obtained using the former:
+
+<<>>=
+library(nlme)
+m <- lme(change ~ drug, data = d, random = ~ 1 | center/drug)
+summary(m)
+@
+
+Contrary to the SAS formula used in the textbook, no Satterthwaite correction is applied on the degrees of freedom. It is, however, possible to use it with \texttt{lme4}. First, we need to refit the model using lme4::lmer
+
+<<>>=
+library(lme4)
+library(lmerTest)
+m <- lmer(change ~ drug + (1 | center/drug), data = d)
+summary(m, ddf = "Satterthwaite")  # this is the default
+@
 
 The authors later used the Gail-Simon test\citep{gail85} to test for qualitative interaction between treatment and strata. The corresponding two-tailed Likelihood ratio test is implemented in the \href{https://cran.r-project.org/web/packages/QualInt/}{QualInt} package.
 
@@ -289,7 +330,6 @@ independence_test(change ~ group | strata, data = dc,
                                                 block = dc$strata),
                   teststat = "quad")
 @
-% $ Emacs noweb and syntax highlighting sucks here
 
 Although we get different results as those reported by the authors, we would reach the same conclusion, namely that there is an effect of the treatment on the outcome after adjusting for the centre effect. We will get, however, closer results ($p=0.02369$ for the row mean squares test statistic) if we simply remove the \texttt{scores=} option when calling SAS \texttt{PROC FREQ} \citep{stokes12}:
 
