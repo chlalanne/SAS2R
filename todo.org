@@ -1,13 +1,18 @@
-
-** TODO Check and complete section 1
-** TODO Update TeX template
-** DONE Update ggplot2 theme
-** TODO Remove plyr dependency
-** TODO Linting + cleanup
-
-* Task list [0/4]
-
-- [ ] #stata sepsis.do
+* Task list [4/9]
+- [X] #stata sepsis.do
 - [ ] #stata asthma.do
 - [ ] data/asthma.{csv,dta}
-- [ ] data/sepsis.{csv,dta} 
+- [ ] data/sepsis.{csv,dta}
+- [ ] TODO Check and complete section 1
+- [ ] TODO Update TeX template
+- [X] DONE Update ggplot2 theme
+- [X] TODO Remove plyr dependency
+- [X] TODO Linting + cleanup
+
+* Inbox
+** TODO ** TODO Check the sepsis study (why logistic reg instead of survival model?)
+
+ [[file:~/git/SAS2R/main.rnw::Based on a logistic regression model, the authors presented a summary of a Type III analysis of effects. Here is what can be done in R. First, we will slightly re arrange the data table so that we have a working data frame with total counts for successes (here, dead patients) and failure (patients still alive) in separate columns, together with columns describing strata and treatment levels.]]
+** TODO Merge local bibliography with centralized Bibtex file
+
+ [[file:~/git/SAS2R/main.rnw::\bibliography{refs}]]
