@@ -1,4 +1,4 @@
-%% Time-stamp: <2020-03-05 15:06:00 chl>
+%% Time-stamp: <2020-03-05 20:35:09 chl>
 \documentclass[10pt,a4paper,svgnames]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{gitinfo}
@@ -96,7 +96,8 @@ The following analyses are based on \cite{dmitrienko05}, with data available onl
 
 \subsection{The HAMD17 study}
 
-\paragraph{Context.} This is a multi-center clinical trial comparing experimental drug vs. placebo in patients with major depression disorder. The outcome is the change from baseline after 9 weeks of acute treatment, and efficacy is measured using the total score of the Hamilton depression rating scale (17 items), also known as the HDRS score (or HAMD17 as it is called in this study) \citep{hamilton-1960-ratin}.
+\subsubsection{Context}
+This is a multi-center clinical trial comparing experimental drug vs. placebo in patients with major depression disorder. The outcome is the change from baseline after 9 weeks of acute treatment, and efficacy is measured using the total score of the Hamilton depression rating scale (17 items), also known as the HDRS score (or HAMD17 as it is called in this study) \citep{hamilton-1960-ratin}.
 
 This is a classical application of unbalanced design and potential heterogeneity between clinical centres, where there is an unequal number of observations per treatment (here, drug by center).
 
@@ -128,6 +129,7 @@ d$drug <- relevel(d$drug, ref = "P")
 
 Briefly, the idea is to copy and paste the SAS \texttt{DATALINES} instructions provided in the textbook as raw text and to \texttt{scan} the flow of characters. This works quite well when there is not too much data. Otherwise, it is better to store the data in text file and read it in R directly. The next bit of code uses \texttt{matrix} to arrange the data into a tabular dataset with 3 columns corresponding to center, drug and change score. When transforming this table to a data frame, \texttt{center} and \texttt{drug} will be converted to factors but we need to handle the proper conversion of \texttt{change} to numerical values. Also, note that we set the reference category to the Placebo group to simplify things a bit.
 
+\subsubsection{Exploratory data analysis}
 Some basic exploratory graphical analysis follows. In the next chunk, we display the raw data for each centre and highlight the difference between drug and placebo using a trend line (Figure~\ref{fig:hamd-xyplot}). Note the use of \texttt{aes(group = 1)} when calling \texttt{geom\_smooth} as there is no real grouping variable in the data structure other than the ones that are already used (\texttt{drug} on the $x$-axis and \texttt{center} for facetting).
 
 <<hamd-xyplot, fig.cap="Distribution of change scores in each centre", fig.width=8, fig.height=4>>=
@@ -166,6 +168,7 @@ p <- ggplot(data = r, aes(x = center, y = change)) +
 p
 @
 
+\subsubsection{Statistical model}
 Now comes the modeling stage. First, we will analyse the primary endpoint using fixed-effect models. \citet{dmitrienko05} provide all the maths that are necessary to understand how to derive various types of sum of squares, and this is further addressed in, e.g., \citep{christensen-2002-plane-answer}. Let us first update the formula we used for producing Table~\ref{tab:hamd-desc} to allow for an interaction term between \texttt{drug} and \texttt{center}, which is denoted as \texttt{drug:center} in \R. Of note, in \R, \texttt{drug * center} will expand to \texttt{drug + center + drug:center}:
 
 <<>>=
